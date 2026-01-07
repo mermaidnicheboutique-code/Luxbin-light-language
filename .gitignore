@@ -73,8 +73,13 @@ venv.bak/
 Thumbs.db
 
 # Light show output files
-*.json
 quantum_light_show.json
+*_light_show.json
+
+# But keep important config files
+!package.json
+!package-lock.json
+!tsconfig.json
 
 # Logs
 *.log
