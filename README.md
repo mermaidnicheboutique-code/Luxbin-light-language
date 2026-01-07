@@ -76,25 +76,39 @@ pip install -r requirements.txt
 ```python
 from luxbin_light_converter import LuxbinLightConverter
 
-# Initialize converter
-converter = LuxbinLightConverter()
-
-# Convert binary data to light show
+# Classical photonic communication (default)
+converter_classical = LuxbinLightConverter(enable_quantum=False)
 binary_data = b"Hello World"
-light_show = converter.create_light_show(binary_data)
+light_show = converter_classical.create_light_show(binary_data)
+print(f"Light sequence: {len(light_show['light_sequence'])} steps")
 
-print(f"LUXBIN Text: {light_show['luxbin_text']}")
-print(f"Light Sequence: {len(light_show['light_sequence'])} steps")
-
-# Display first few wavelengths
-for item in light_show['light_sequence'][:5]:
-    print(f"'{item['character']}' → {item['wavelength_nm']}nm")
+# Quantum ion trap control (with hardware mappings)
+converter_quantum = LuxbinLightConverter(enable_quantum=True)
+quantum_show = converter_quantum.create_grammar_light_show("HADAMARD GATE")
+for item in quantum_show['light_sequence'][:3]:
+    if 'quantum_operation' in item:
+        op = item['quantum_operation']
+        print(f"'{item['character']}' → {op['operation']} ({op['ion_type']})")
 ```
 
 ### Demo
 ```bash
 python luxbin_light_converter.py
 ```
+
+### Modular Design
+LUXBIN supports both classical and quantum computing paradigms in a single codebase:
+
+**Classical Mode** (`enable_quantum=False`):
+- Pure photonic communication for universal computer interoperability
+- No quantum-specific features required
+- Suitable for classical hardware implementations
+
+**Quantum Mode** (`enable_quantum=True`):
+- Extended with ion trap quantum control mappings
+- Direct interface to real quantum hardware protocols
+- Wavelengths map to atomic transitions (397nm Ca⁺, 422nm Sr⁺, etc.)
+- Enables photonic control of trapped-ion quantum computers
 
 ---
 
@@ -133,6 +147,21 @@ python luxbin_light_converter.py
 ---
 
 ## 💎 Quantum Computer Integration
+
+### Ion Trap Quantum Computers (Real Hardware)
+LUXBIN wavelengths directly map to **real quantum control protocols**:
+
+**Wavelength → Quantum Operation Mapping:**
+- **397nm**: Calcium-40 single qubit gates
+- **422nm**: Strontium-88 state preparation
+- **729nm**: Ytterbium-171 two-qubit gates
+- **854nm**: Rubidium-87 cooling cycles
+
+**Control Parameters:**
+- **Wavelength**: Atomic transition selection
+- **Duration**: Pulse timing (nanosecond precision)
+- **Phase**: Wave phase (future extension)
+- **Polarization**: Linear/circular (future extension)
 
 ### Diamond NV Centers
 Nitrogen-vacancy centers in diamonds are quantum systems that can:

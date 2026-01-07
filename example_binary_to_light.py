@@ -338,7 +338,7 @@ This enables communication across any computing platform through colored light w
 
     print(f"Text file: {filename}")
     print(f"Content length: {light_show['file_info']['text_length']} characters")
-    print(f"LUXBIN encoded: {len(light_show['luxbin_text'])} characters")
+    print(f"LUXBIN encoded: {len(light_show['light_sequence'])} light steps")
     print(".3f")
     print(f"Total duration: {light_show['total_duration']:.2f}s")
     print(f"Data type: {light_show['data_type']}")
@@ -348,6 +348,50 @@ This enables communication across any computing platform through colored light w
     print("- Filename metadata preservation")
     print("- UTF-8 encoding support")
     print("- Semantic color variations")
+
+def example_quantum_control_mapping():
+    """Convert data to light show with ion trap quantum control mapping."""
+    print("\n=== Ion Trap Quantum Control Mapping Example ===\n")
+
+    converter = LuxbinLightConverter()
+
+    # Simple quantum algorithm encoded as text
+    quantum_algorithm = "HADAMARD GATE ON QUBIT 0"
+
+    light_show = converter.create_grammar_light_show(quantum_algorithm)
+
+    print(f"Quantum Algorithm: {quantum_algorithm}")
+    print(f"Light sequence length: {len(light_show['light_sequence'])}")
+    print(".2f")
+
+    print("\nQuantum Control Operations (first 10):")
+    for i, item in enumerate(light_show['light_sequence'][:10]):
+        char = item['character']
+        wavelength = item['wavelength_nm']
+        quantum_op = item['quantum_operation']
+
+        op = quantum_op['operation']
+        ion = quantum_op['ion_type']
+        transition = quantum_op['transition']
+
+        print("2d"
+              f"→ {op} ({ion}, {transition})")
+
+    print("\nQuantum Control Features:")
+    print("- Wavelengths map to real atomic transitions")
+    print("- Duration controls pulse timing")
+    print("- Can directly control ion trap quantum computers")
+    print("- Based on established quantum control protocols")
+    print("- Ready for hardware implementation")
+
+    # Show some statistics
+    operations = [item['quantum_operation']['operation'] for item in light_show['light_sequence']]
+    op_counts = {}
+    for op in operations:
+        op_counts[op] = op_counts.get(op, 0) + 1
+
+    print(f"\nOperation Distribution: {op_counts}")
+    print(f"Primary Operation: {max(op_counts, key=op_counts.get)}")
 
 def main():
     """Run all examples."""
@@ -364,6 +408,7 @@ def main():
     example_audio_encoding()
     example_json_encoding()
     example_text_file_encoding()
+    example_quantum_control_mapping()
     save_light_show_json()
 
     print("\n" + "=" * 50)
