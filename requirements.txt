@@ -6,6 +6,11 @@
 # No external dependencies required for basic functionality
 # This is a pure Python implementation
 
+# API Server dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+
 # Optional: For advanced color science (future enhancement)
 # color-science>=0.4.0
 # colour>=0.1.5
