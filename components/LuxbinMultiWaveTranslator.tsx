@@ -291,33 +291,87 @@ export function LuxbinMultiWaveTranslator() {
     }, 1000);
   }, [inputText, textToBinary, binaryToLuxbin, luxbinToWaves, drawWaves]);
 
-  // Generate light show
-  const generateLightShow = useCallback(() => {
+  // Generate light show using Python API
+  const generateLightShow = useCallback(async () => {
     if (!inputText.trim()) {
       alert('Please enter some text first!');
       return;
     }
 
-    const binary = textToBinary(inputText);
-    const luxbin = binaryToLuxbin(binary);
-    const { colors, amplitudes } = luxbinToWaves(luxbin);
+    try {
+      // Call the Light Language API
+      const response = await fetch('/api/v1/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          text: inputText,
+          enable_quantum: true,
+          format: 'full'
+        })
+      });
 
-    if (animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
-    }
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+      }
 
-    let time = 0;
-    const animate = () => {
-      time += 0.02;
-      drawWaves(colors, amplitudes);
-      animationRef.current = requestAnimationFrame(animate);
-    };
-    animate();
+      const data = await response.json();
 
-    setActiveStep(4);
+      if (data.success && data.light_show) {
+        // Extract colors and wavelengths from API response
+        const colors = data.light_show.light_sequence.map((item: any) => {
+          const wavelength = item.wavelength_nm;
+          const hue = ((wavelength - 400) / 300) * 360;
+          return `hsl(${hue.toFixed(0)}, 70%, 60%)`;
+        });
 
-    if (currentMode !== 'photonic') {
-      setTimeout(() => playAudio(), 500);
+        const amplitudes = data.light_show.light_sequence.map(() => [0.4, 0.4, 0.4]);
+
+        setWaveColors(colors);
+        setAmplitudes(amplitudes);
+        setLuxbinDict(data.luxbin_representation);
+        setBinaryCode(data.binary_code);
+        setWavelengthInfo(`Wavelengths: ${data.light_show.light_sequence.slice(0, 8).map((s: any) => s.wavelength_nm.toFixed(1) + 'nm').join(', ')}`);
+
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+
+        const animate = () => {
+          drawWaves(colors, amplitudes);
+          animationRef.current = requestAnimationFrame(animate);
+        };
+        animate();
+
+        setActiveStep(4);
+
+        if (currentMode !== 'photonic') {
+          setTimeout(() => playAudio(), 500);
+        }
+      }
+    } catch (error) {
+      console.error('API Error:', error);
+      // Fallback to local processing
+      const binary = textToBinary(inputText);
+      const luxbin = binaryToLuxbin(binary);
+      const { colors, amplitudes } = luxbinToWaves(luxbin);
+
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+
+      const animate = () => {
+        drawWaves(colors, amplitudes);
+        animationRef.current = requestAnimationFrame(animate);
+      };
+      animate();
+
+      setActiveStep(4);
+
+      if (currentMode !== 'photonic') {
+        setTimeout(() => playAudio(), 500);
+      }
     }
   }, [inputText, currentMode, textToBinary, binaryToLuxbin, luxbinToWaves, drawWaves, playAudio]);
 
