@@ -1,0 +1,16 @@
+# LUXBIN Light Language Requirements
+#
+# Core dependencies for the LUXBIN light language converter
+# Install with: pip install -r requirements.txt
+
+# No external dependencies required for basic functionality
+# This is a pure Python implementation
+
+# Optional: For advanced color science (future enhancement)
+# color-science>=0.4.0
+# colour>=0.1.5
+
+# Development dependencies (see requirements-dev.txt)
+# pytest>=7.0.0
+# black>=22.0.0
+# flake8>=4.0.0

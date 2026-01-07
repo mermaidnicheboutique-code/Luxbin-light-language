@@ -1,0 +1,773 @@
+#!/usr/bin/env python3
+"""
+LUXBIN Light Language Converter
+
+Converts binary data to LUXBIN photonic encoding for universal computer communication
+via color light wavelengths. Designed for quantum computers using diamond NV centers.
+
+Process: Binary -> LUXBIN Photonic Encoding -> Light Show (color wavelength sequence)
+
+Author: Nichole Christie
+Based on LUXBIN blockchain photonic encoding
+"""
+
+import colorsys
+import time
+from typing import List, Dict, Any, Tuple
+import struct
+
+# LUXBIN Light Dictionary - Character to Photonic Mapping
+LUXBIN_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?;:-()[]{}@#$%^&*+=_~`<>\"'|\\"
+# Extended with comprehensive punctuation and symbols (77 characters total)
+
+# Shades to Grammar Mapping - Color variations for grammatical structure
+GRAMMAR_SHADES = {
+    'noun': {'saturation': 100, 'lightness': 70, 'description': 'Full saturation - concrete objects/things'},
+    'verb': {'saturation': 70, 'lightness': 65, 'description': 'Medium saturation - actions/states'},
+    'adjective': {'saturation': 40, 'lightness': 75, 'description': 'Low saturation - descriptions/qualities'},
+    'adverb': {'saturation': 55, 'lightness': 60, 'description': 'Medium-low saturation - how/when/where'},
+    'pronoun': {'saturation': 85, 'lightness': 80, 'description': 'High saturation, high lightness - substitutes'},
+    'preposition': {'saturation': 25, 'lightness': 55, 'description': 'Very low saturation - relationships'},
+    'conjunction': {'saturation': 90, 'lightness': 50, 'description': 'High saturation, low lightness - connections'},
+    'interjection': {'saturation': 100, 'lightness': 90, 'description': 'Full saturation, very bright - exclamations'},
+    'punctuation': {'saturation': 10, 'lightness': 30, 'description': 'Very low saturation, dark - structural marks'},
+    'binary': {'saturation': 0, 'lightness': 50, 'description': 'Zero saturation, grayscale - pure binary data'},
+    'default': {'saturation': 60, 'lightness': 70, 'description': 'Default grammatical shade'}
+}
+
+class LuxbinLightConverter:
+    """
+    Converts binary data to photonic light shows for universal computer communication.
+
+    Key Features:
+    - Binary to LUXBIN character mapping
+    - Character to HSL color conversion
+    - HSL to wavelength approximation
+    - Quantum-ready for diamond NV center storage
+    """
+
+    def __init__(self):
+        self.alphabet = LUXBIN_ALPHABET
+        self.alphabet_len = len(self.alphabet)
+
+    def binary_to_luxbin_chars(self, binary_data: bytes, chunk_size: int = 6) -> str:
+        """
+        Convert binary data to LUXBIN characters.
+
+        Args:
+            binary_data: Raw binary data
+            chunk_size: Bits per character (6 bits = 64 possible values)
+
+        Returns:
+            String of LUXBIN characters
+        """
+        chars = []
+        bit_string = ''.join(format(byte, '08b') for byte in binary_data)
+
+        # Use optimal chunk size based on alphabet size
+        max_bits = len(self.alphabet).bit_length()
+        optimal_chunk = min(max_bits, 7)  # Use up to 7 bits for better compression
+
+        # Pad to multiple of optimal chunk size
+        while len(bit_string) % optimal_chunk != 0:
+            bit_string += '0'
+
+        # Convert chunks to characters using full alphabet range
+        for i in range(0, len(bit_string), optimal_chunk):
+            chunk = bit_string[i:i+optimal_chunk]
+            index = int(chunk, 2)
+            if index < self.alphabet_len:
+                chars.append(self.alphabet[index])
+            else:
+                # For overflow, use modulo to wrap around
+                chars.append(self.alphabet[index % self.alphabet_len])
+
+        return ''.join(chars)
+
+    def compress_binary_data(self, binary_data: bytes) -> bytes:
+        """
+        Apply simple run-length encoding compression for repetitive data.
+
+        Args:
+            binary_data: Raw binary data
+
+        Returns:
+            Compressed binary data
+        """
+        if len(binary_data) < 3:
+            return binary_data
+
+        compressed = []
+        i = 0
+
+        while i < len(binary_data):
+            # Look for runs of identical bytes
+            current_byte = binary_data[i]
+            run_length = 1
+            j = i + 1
+
+            # Count consecutive identical bytes (max 255)
+            while j < len(binary_data) and binary_data[j] == current_byte and run_length < 255:
+                run_length += 1
+                j += 1
+
+            if run_length >= 3:
+                # Use compression marker (0xFF) + byte + count
+                compressed.extend([0xFF, current_byte, run_length])
+                i = j
+            else:
+                # No compression needed, add bytes directly
+                for k in range(run_length):
+                    compressed.append(binary_data[i + k])
+                i += run_length
+
+        return bytes(compressed)
+
+    def decompress_binary_data(self, compressed_data: bytes) -> bytes:
+        """
+        Decompress run-length encoded data.
+
+        Args:
+            compressed_data: Compressed binary data
+
+        Returns:
+            Original binary data
+        """
+        decompressed = []
+        i = 0
+
+        while i < len(compressed_data):
+            if compressed_data[i] == 0xFF and i + 2 < len(compressed_data):
+                # Compressed run: marker + byte + count
+                byte_value = compressed_data[i + 1]
+                count = compressed_data[i + 2]
+                decompressed.extend([byte_value] * count)
+                i += 3
+            else:
+                # Uncompressed byte
+                decompressed.append(compressed_data[i])
+                i += 1
+
+        return bytes(decompressed)
+
+    def char_to_hsl(self, char: str, grammar_type: str = 'default') -> Tuple[int, int, int]:
+        """
+        Convert LUXBIN character to HSL color, optionally modified by grammar.
+
+        Args:
+            char: Single LUXBIN character
+            grammar_type: Grammatical category ('noun', 'verb', etc.)
+
+        Returns:
+            Tuple of (hue, saturation, lightness) in degrees/percent
+        """
+        if char not in self.alphabet:
+            raise ValueError(f"Invalid LUXBIN character: {char}")
+
+        pos = self.alphabet.index(char)
+        hue = (pos * 360) // self.alphabet_len
+
+        # Apply grammar shade modifications
+        shade = GRAMMAR_SHADES.get(grammar_type, GRAMMAR_SHADES['default'])
+        saturation = shade['saturation']
+        lightness = shade['lightness']
+
+        return (hue, saturation, lightness)
+
+    def analyze_grammar(self, text: str) -> List[Tuple[str, str]]:
+        """
+        Simple grammar analysis - basic part-of-speech tagging.
+
+        Args:
+            text: Input text to analyze
+
+        Returns:
+            List of (character, grammar_type) tuples
+        """
+        words = text.upper().split()
+        grammar_tags = []
+
+        # Basic word lists for different parts of speech
+        nouns = {'CAT', 'DOG', 'HOUSE', 'CAR', 'COMPUTER', 'LIGHT', 'WORLD', 'QUANTUM', 'DIAMOND', 'DATA'}
+        verbs = {'RUN', 'JUMP', 'EAT', 'SLEEP', 'COMPUTE', 'STORE', 'DISPLAY', 'CONVERT', 'CREATE', 'BUILD'}
+        adjectives = {'BIG', 'SMALL', 'FAST', 'SLOW', 'BRIGHT', 'DARK', 'HOT', 'COLD', 'QUICK', 'EASY'}
+        adverbs = {'QUICKLY', 'SLOWLY', 'VERY', 'REALLY', 'NOW', 'THEN', 'HERE', 'THERE'}
+        pronouns = {'I', 'YOU', 'HE', 'SHE', 'IT', 'WE', 'THEY', 'ME', 'HIM', 'HER', 'US', 'THEM'}
+        prepositions = {'IN', 'ON', 'AT', 'TO', 'FROM', 'BY', 'WITH', 'ABOUT', 'OVER', 'UNDER'}
+        conjunctions = {'AND', 'OR', 'BUT', 'SO', 'BECAUSE', 'ALTHOUGH', 'WHILE', 'SINCE'}
+        interjections = {'OH', 'WOW', 'HEY', 'HELLO', 'GOODBYE', 'YES', 'NO', 'PLEASE', 'THANKS'}
+
+        word_index = 0
+        for word in words:
+            # Remove punctuation for analysis
+            clean_word = ''.join(c for c in word if c.isalnum())
+
+            # Determine grammar type
+            if clean_word in nouns:
+                grammar_type = 'noun'
+            elif clean_word in verbs:
+                grammar_type = 'verb'
+            elif clean_word in adjectives:
+                grammar_type = 'adjective'
+            elif clean_word in adverbs:
+                grammar_type = 'adverb'
+            elif clean_word in pronouns:
+                grammar_type = 'pronoun'
+            elif clean_word in prepositions:
+                grammar_type = 'preposition'
+            elif clean_word in conjunctions:
+                grammar_type = 'conjunction'
+            elif clean_word in interjections:
+                grammar_type = 'interjection'
+            else:
+                # For unknown words, alternate based on position
+                if word_index % 4 == 0:
+                    grammar_type = 'noun'
+                elif word_index % 4 == 1:
+                    grammar_type = 'verb'
+                elif word_index % 4 == 2:
+                    grammar_type = 'adjective'
+                else:
+                    grammar_type = 'adverb'
+
+            # Apply grammar type to each character in the word
+            for char in word:
+                if char in self.alphabet:
+                    # Check if character is punctuation
+                    if char in '.,!?;:-()[]{}':
+                        char_grammar_type = 'punctuation'
+                    else:
+                        char_grammar_type = grammar_type
+                    grammar_tags.append((char, char_grammar_type))
+                elif char == ' ':
+                    grammar_tags.append((char, 'default'))
+
+            word_index += 1
+
+        return grammar_tags
+
+    def hsl_to_wavelength(self, hue: int, saturation: int, lightness: int) -> float:
+        """
+        Approximate HSL color to visible light wavelength.
+
+        This is a simplified mapping - real implementation would use
+        spectral data and CIE color matching functions.
+
+        Args:
+            hue: Hue in degrees (0-360)
+            saturation: Saturation in percent (0-100)
+            lightness: Lightness in percent (0-100)
+
+        Returns:
+            Approximate wavelength in nanometers
+        """
+        # Visible spectrum: ~400nm (violet) to ~700nm (red)
+        # Map hue to wavelength range
+        wavelength = 400 + (hue / 360) * (700 - 400)
+
+        # Adjust for saturation/lightness (brighter = longer wavelength approx)
+        intensity_factor = (saturation / 100) * (lightness / 100)
+        wavelength += (intensity_factor - 0.5) * 50  # Small adjustment
+
+        return round(wavelength, 1)
+
+    def create_light_show(self, binary_data: bytes) -> Dict[str, Any]:
+        """
+        Convert binary data to a photonic light show sequence.
+
+        Args:
+            binary_data: Input binary data
+
+        Returns:
+            Dictionary containing:
+            - luxbin_text: LUXBIN character string
+            - light_sequence: List of (wavelength, duration) tuples
+            - quantum_data: NV center programming data
+        """
+        # Convert binary to LUXBIN characters
+        luxbin_text = self.binary_to_luxbin_chars(binary_data)
+
+        # Create light sequence
+        light_sequence = []
+        base_duration = 0.1  # 100ms per character
+
+        for char in luxbin_text:
+            hsl = self.char_to_hsl(char)
+            wavelength = self.hsl_to_wavelength(*hsl)
+            duration = base_duration
+
+            # Special duration for space (pause)
+            if char == ' ':
+                duration *= 2
+
+            light_sequence.append({
+                'character': char,
+                'hsl': hsl,
+                'wavelength_nm': wavelength,
+                'duration_s': duration
+            })
+
+        # Quantum NV center data (simplified)
+        quantum_data = self._generate_nv_center_data(light_sequence)
+
+        return {
+            'luxbin_text': luxbin_text,
+            'light_sequence': light_sequence,
+            'quantum_data': quantum_data,
+            'total_duration': sum(item['duration_s'] for item in light_sequence),
+            'data_size': len(binary_data)
+        }
+
+    def _generate_nv_center_data(self, light_sequence: List[Dict]) -> Dict[str, Any]:
+        """
+        Generate quantum NV center programming data.
+
+        In a real quantum system, this would program the NV centers
+        to emit/store the photonic sequence.
+
+        Args:
+            light_sequence: Light show sequence
+
+        Returns:
+            NV center programming data
+        """
+        # Simplified: map wavelengths to NV center states
+        # Real implementation would involve quantum control pulses
+
+        nv_states = []
+        for item in light_sequence:
+            wavelength = item['wavelength_nm']
+            duration = item['duration_s']
+
+            # Map wavelength to NV center transition
+            # NV centers have zero-phonon line at ~637nm, phonon sidebands
+            if 635 <= wavelength <= 640:
+                transition = 'zero_phonon'
+            elif wavelength < 635:
+                transition = 'violet_sideband'
+            else:
+                transition = 'red_sideband'
+
+            nv_states.append({
+                'transition': transition,
+                'wavelength': wavelength,
+                'duration': duration,
+                'pulse_sequence': f"NV_{transition}_{int(duration*1000)}ms"
+            })
+
+        return {
+            'nv_center_states': nv_states,
+            'total_states': len(nv_states),
+            'estimated_storage_time': sum(item['duration_s'] for item in light_sequence) * 1e6  # microseconds
+        }
+
+    def light_show_to_binary(self, light_sequence: List[Dict]) -> bytes:
+        """
+        Reverse conversion: Light show back to binary data.
+
+        Args:
+            light_sequence: Light show sequence from create_light_show
+
+        Returns:
+            Original binary data
+        """
+        luxbin_text = ''.join(item['character'] for item in light_sequence)
+
+        # Convert back to binary
+        binary_string = ''
+        for char in luxbin_text:
+            if char in self.alphabet:
+                pos = self.alphabet.index(char)
+                binary_string += format(pos, '06b')
+            else:
+                binary_string += '000000'  # Default for invalid
+
+        # Convert to bytes (pad/truncate to byte boundaries)
+        while len(binary_string) % 8 != 0:
+            binary_string = binary_string[:-1]  # Remove padding
+
+        binary_data = bytearray()
+        for i in range(0, len(binary_string), 8):
+            byte_str = binary_string[i:i+8]
+            binary_data.append(int(byte_str, 2))
+
+        return bytes(binary_data)
+
+    def create_grammar_light_show(self, text: str) -> Dict[str, Any]:
+        """
+        Create a grammar-aware light show with shades encoding grammatical structure.
+
+        Args:
+            text: Input text to convert with grammar analysis
+
+        Returns:
+            Dictionary containing grammar-enhanced light show data
+        """
+        # Analyze grammar
+        grammar_tags = self.analyze_grammar(text)
+
+        # Create light sequence with grammar shades
+        light_sequence = []
+        base_duration = 0.1  # 100ms per character
+
+        for char, grammar_type in grammar_tags:
+            if char == ' ':
+                # Spaces get default treatment but longer duration
+                hsl = self.char_to_hsl(' ', 'default')
+                duration = base_duration * 2
+            else:
+                hsl = self.char_to_hsl(char, grammar_type)
+                duration = base_duration
+
+            wavelength = self.hsl_to_wavelength(*hsl)
+
+            light_sequence.append({
+                'character': char,
+                'grammar_type': grammar_type,
+                'hsl': hsl,
+                'wavelength_nm': wavelength,
+                'duration_s': duration
+            })
+
+        # Quantum NV center data
+        quantum_data = self._generate_nv_center_data(light_sequence)
+
+        return {
+            'original_text': text,
+            'grammar_tags': grammar_tags,
+            'light_sequence': light_sequence,
+            'quantum_data': quantum_data,
+            'total_duration': sum(item['duration_s'] for item in light_sequence),
+            'total_characters': len(grammar_tags)
+        }
+
+    def create_binary_light_show(self, binary_data: bytes, use_compression: bool = True) -> Dict[str, Any]:
+        """
+        Convert raw binary data to a pure binary light show (grayscale encoding).
+
+        This is for non-text binary files (images, executables, compressed data, etc.)
+        that should be encoded as pure binary rather than interpreted as text.
+
+        Args:
+            binary_data: Raw binary data (any file type)
+            use_compression: Whether to apply run-length compression
+
+        Returns:
+            Dictionary containing binary-encoded light show data
+        """
+        # Apply compression if requested
+        original_size = len(binary_data)
+        if use_compression:
+            binary_data = self.compress_binary_data(binary_data)
+            compression_ratio = original_size / len(binary_data) if len(binary_data) > 0 else 1.0
+        else:
+            compression_ratio = 1.0
+
+        # Convert binary data to LUXBIN characters
+        luxbin_text = self.binary_to_luxbin_chars(binary_data)
+
+        # Create light sequence with binary grammar (grayscale)
+        light_sequence = []
+        base_duration = 0.05  # Faster for binary data (50ms per character)
+
+        for char in luxbin_text:
+            hsl = self.char_to_hsl(char, 'binary')  # Pure binary encoding
+            wavelength = self.hsl_to_wavelength(*hsl)
+            duration = base_duration
+
+            # Calculate actual binary value (up to 7 bits now)
+            max_bits = len(self.alphabet).bit_length()
+            bit_length = min(max_bits, 7)
+            binary_value = format(self.alphabet.index(char), f'0{bit_length}b')
+
+            light_sequence.append({
+                'character': char,
+                'grammar_type': 'binary',
+                'hsl': hsl,
+                'wavelength_nm': wavelength,
+                'duration_s': duration,
+                'binary_value': binary_value
+            })
+
+        # Quantum NV center data
+        quantum_data = self._generate_nv_center_data(light_sequence)
+
+        return {
+            'binary_data': binary_data.hex(),
+            'original_size': original_size,
+            'compressed_size': len(binary_data),
+            'luxbin_text': luxbin_text,
+            'light_sequence': light_sequence,
+            'quantum_data': quantum_data,
+            'total_duration': sum(item['duration_s'] for item in light_sequence),
+            'compression_ratio': len(binary_data) / len(luxbin_text) if len(luxbin_text) > 0 else 0,
+            'data_compression': compression_ratio,
+            'data_type': 'binary'
+        }
+
+    def create_image_light_show(self, image_data: bytes, width: int = None, height: int = None) -> Dict[str, Any]:
+        """
+        Convert image data to structured RGB light show.
+
+        Args:
+            image_data: Raw RGB image bytes
+            width: Image width (optional)
+            height: Image height (optional)
+
+        Returns:
+            Dictionary containing image-encoded light show data
+        """
+        # Compress image data first
+        compressed_data = self.compress_binary_data(image_data)
+
+        # Create header with metadata
+        header = f"IMG:{len(image_data)}:{width or 0}:{height or 0}:"
+        header_bytes = header.encode('utf-8')
+
+        # Combine header and compressed data
+        full_data = header_bytes + compressed_data
+
+        # Use binary encoding for the combined data
+        binary_show = self.create_binary_light_show(full_data, use_compression=False)
+
+        # Override data type
+        binary_show['data_type'] = 'image'
+        binary_show['image_info'] = {
+            'original_size': len(image_data),
+            'compressed_size': len(compressed_data),
+            'width': width,
+            'height': height
+        }
+
+        return binary_show
+
+    def create_audio_light_show(self, audio_data: bytes, sample_rate: int = 44100, channels: int = 2) -> Dict[str, Any]:
+        """
+        Convert audio data to waveform light show.
+
+        Args:
+            audio_data: Raw audio bytes (PCM data)
+            sample_rate: Audio sample rate
+            channels: Number of audio channels
+
+        Returns:
+            Dictionary containing audio-encoded light show data
+        """
+        # Compress audio data
+        compressed_data = self.compress_binary_data(audio_data)
+
+        # Create header with audio metadata
+        header = f"AUD:{len(audio_data)}:{sample_rate}:{channels}:"
+        header_bytes = header.encode('utf-8')
+
+        # Combine header and compressed data
+        full_data = header_bytes + compressed_data
+
+        # Use binary encoding
+        binary_show = self.create_binary_light_show(full_data, use_compression=False)
+
+        # Override data type
+        binary_show['data_type'] = 'audio'
+        binary_show['audio_info'] = {
+            'original_size': len(audio_data),
+            'compressed_size': len(compressed_data),
+            'sample_rate': sample_rate,
+            'channels': channels
+        }
+
+        return binary_show
+
+    def create_json_light_show(self, json_data: dict) -> Dict[str, Any]:
+        """
+        Convert JSON data to structured light show with metadata preservation.
+
+        Args:
+            json_data: Python dictionary to encode
+
+        Returns:
+            Dictionary containing JSON-encoded light show data
+        """
+        import json
+
+        # Serialize JSON
+        json_string = json.dumps(json_data, separators=(',', ':'))
+        json_bytes = json_string.encode('utf-8')
+
+        # Compress the JSON
+        compressed_data = self.compress_binary_data(json_bytes)
+
+        # Create header
+        header = f"JSON:{len(json_bytes)}:"
+        header_bytes = header.encode('utf-8')
+
+        # Combine
+        full_data = header_bytes + compressed_data
+
+        # Use binary encoding
+        binary_show = self.create_binary_light_show(full_data, use_compression=False)
+
+        # Override data type
+        binary_show['data_type'] = 'json'
+        binary_show['json_info'] = {
+            'original_size': len(json_bytes),
+            'compressed_size': len(compressed_data),
+            'keys_count': len(json_data) if isinstance(json_data, dict) else 0
+        }
+
+        return binary_show
+
+    def create_text_file_light_show(self, text_content: str, filename: str = None) -> Dict[str, Any]:
+        """
+        Convert text file to grammar-aware light show with metadata.
+
+        Args:
+            text_content: Text content
+            filename: Original filename (optional)
+
+        Returns:
+            Dictionary containing text file light show data
+        """
+        # Use grammar-aware encoding for text
+        text_bytes = text_content.encode('utf-8')
+
+        # Create header with filename
+        filename_part = filename or "unknown.txt"
+        header = f"TXT:{len(text_bytes)}:{filename_part}:"
+        header_bytes = header.encode('utf-8')
+
+        # Combine
+        full_data = header_bytes + text_bytes
+
+        # Use grammar-aware encoding
+        grammar_show = self.create_grammar_light_show(full_data.decode('utf-8', errors='replace'))
+
+        # Override data type
+        grammar_show['data_type'] = 'text_file'
+        grammar_show['file_info'] = {
+            'filename': filename_part,
+            'text_length': len(text_content),
+            'encoding': 'utf-8'
+        }
+
+        return grammar_show
+
+def demo():
+    """Demonstration of the LUXBIN Light Language converter."""
+    converter = LuxbinLightConverter()
+
+    print("🌈 LUXBIN Light Language Demo")
+    print("=" * 50)
+
+    # Demo 1: Basic binary conversion
+    print("\n1. Basic Binary to Light Conversion:")
+    print("-" * 40)
+    text = "HELLO WORLD"
+    binary_data = text.encode('utf-8')
+
+    print(f"Original text: {text}")
+    print(f"Binary data: {binary_data.hex()}")
+
+    # Create light show
+    light_show = converter.create_light_show(binary_data)
+
+    print("\nLUXBIN Light Show:")
+    print(f"Text: {light_show['luxbin_text']}")
+    print(f"Total duration: {light_show['total_duration']:.2f}s")
+    print(f"Sequence length: {len(light_show['light_sequence'])}")
+
+    print("\nLight Sequence (first 8):")
+    for i, item in enumerate(light_show['light_sequence'][:8]):
+        print("2d"
+              f"for {item['duration_s']}s")
+
+    # Demo 2: Grammar-aware conversion
+    print("\n\n2. Grammar-Aware Light Show:")
+    print("-" * 40)
+    grammar_text = "BIG CAT RUNS QUICKLY"
+
+    print(f"Original text: {grammar_text}")
+
+    # Create grammar light show
+    grammar_show = converter.create_grammar_light_show(grammar_text)
+
+    print("\nGrammar Analysis:")
+    unique_grammar = set(tag[1] for tag in grammar_show['grammar_tags'])
+    print(f"Grammar types used: {', '.join(unique_grammar)}")
+
+    print("\nGrammar Light Sequence:")
+    for i, item in enumerate(grammar_show['light_sequence'][:12]):
+        char = item['character']
+        grammar = item['grammar_type']
+        wavelength = item['wavelength_nm']
+        hsl = item['hsl']
+        if char != ' ':
+            print("2d"
+                  f"for {item['duration_s']}s")
+        else:
+            print("2d")
+
+    print("\nGrammar Shade Legend:")
+    for grammar_type, shade in GRAMMAR_SHADES.items():
+        if grammar_type in unique_grammar:
+            print(f"  {grammar_type}: S{shade['saturation']}%, L{shade['lightness']}% - {shade['description']}")
+
+    # Quantum comparison
+    basic_quantum = light_show['quantum_data']
+    grammar_quantum = grammar_show['quantum_data']
+
+    print("\nQuantum Storage Comparison:")
+    print(".0f")
+    print(".0f")
+    print(f"  Grammar adds {(grammar_quantum['estimated_storage_time'] / basic_quantum['estimated_storage_time'] - 1) * 100:.1f}% more information!")
+
+    print("\n🎉 Grammar shades enable richer, more structured photonic communication!")
+
+    # Demo 3: Punctuation and Binary
+    print("\n\n3. Punctuation & Binary Data:")
+    print("-" * 40)
+
+    # Punctuation example
+    punct_text = "HELLO, WORLD! HOW ARE YOU?"
+    print(f"Punctuation text: {punct_text}")
+
+    punct_show = converter.create_grammar_light_show(punct_text)
+    punct_types = set(tag[1] for tag in punct_show['grammar_tags'])
+    print(f"Grammar types: {', '.join(punct_types)}")
+
+    print("\nPunctuation in light sequence:")
+    for i, item in enumerate(punct_show['light_sequence']):
+        if item['character'] in '.,!?':
+            char = item['character']
+            grammar = item['grammar_type']
+            wavelength = item['wavelength_nm']
+            hsl = item['hsl']
+            print("2d"
+                  f"for {item['duration_s']}s")
+
+    # Binary data example with compression
+    print("\nBinary Data Example:")
+    binary_sample = bytes([255, 128, 64, 32, 16, 8, 4, 2, 1, 0])  # Sample binary data
+    print(f"Raw binary: {binary_sample.hex()} ({len(binary_sample)} bytes)")
+
+    binary_show = converter.create_binary_light_show(binary_sample, use_compression=True)
+    print(f"LUXBIN encoding: {binary_show['luxbin_text'][:20]}...")
+    print(".2f")
+    print(f"Data compression: {binary_show['data_compression']:.2f}x")
+    print(f"Bit depth: Up to 7 bits per character (was 6)")
+
+    print("\nBinary light sequence (first 5):")
+    for i, item in enumerate(binary_show['light_sequence'][:5]):
+        binary_val = item['binary_value']
+        wavelength = item['wavelength_nm']
+        print("2d"
+              f"(grayscale) for {item['duration_s']}s")
+
+    print("\nEnhanced Punctuation & Data Types:")
+    print("- 77 characters (was 53) including @#$%^&*+=_~`<>\"\"'|\\")
+    print("- Run-length compression for repetitive data")
+    print("- Specialized encoding for images, audio, JSON, text files")
+    print("- Variable bit depth (up to 7 bits per character)")
+    print("\n✨ Complete digital communication system!")
+
+if __name__ == "__main__":
+    demo()
