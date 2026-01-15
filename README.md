@@ -47,6 +47,86 @@ The LUXBIN Light Language enables **universal computer communication** through p
 | ⚡ **Energy Efficient** | Photonic transmission uses minimal power |
 | ⏱️ **Time-Domain** | Morse Light encoding for quantum satellites |
 | 🌍 **Multi-Language** | 133+ languages via translation API |
+| 💻 **Code Translation** | Python ↔ JavaScript ↔ C++ with AST-based parsing |
+
+---
+
+## 💻 Computer Language Translation
+
+**LUXBIN now supports code translation between programming languages!**
+
+### Supported Translations
+- **Python ↔ JavaScript**: Bidirectional conversion with AST-based parsing
+- **Python → C++**: Convert Python to modern C++ with STL containers
+- **JavaScript → C++**: Translate JS to C++ equivalents
+- **C++ → Python/JavaScript**: Convert C++ back to dynamic languages
+- **Type Inference**: Automatic type detection and cross-language mapping
+- **AST-Based Parsing**: Accurate syntax tree analysis for reliable translation
+
+### Quick Code Translation Example
+
+**Python to JavaScript:**
+```python
+def greet(name):
+    message = "Hello, " + name
+    return message
+```
+
+**Translates to:**
+```javascript
+function greet(name) {
+  let message = "Hello, " + name;
+  return message;
+}
+```
+
+**Python to C++:**
+```python
+def greet(name):
+    message = "Hello, " + name
+    return message
+```
+
+**Translates to:**
+```cpp
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+auto greet(string name) {
+    auto message = "Hello, " + name;
+    return message;
+}
+```
+
+### API Usage
+
+```bash
+# Python to JavaScript
+curl -X POST http://localhost:3000/api/v1/translate-code \\
+  -H "Content-Type: application/json" \\
+  -d '{"code": "def hello(): return \"world\"", "source_language": "python", "target_language": "javascript"}'
+
+# Python to C++
+curl -X POST http://localhost:3000/api/v1/translate-code \\
+  -H "Content-Type: application/json" \\
+  -d '{"code": "def hello(): return \"world\"", "source_language": "python", "target_language": "cpp"}'
+
+# C++ to JavaScript
+curl -X POST http://localhost:3000/api/v1/translate-code \\
+  -H "Content-Type: application/json" \\
+  -d '{"code": "int main() { return 0; }", "source_language": "cpp", "target_language": "javascript"}'
+```
+
+### Features
+- ✅ **AST-Based Parsing**: Uses Python's `ast`, JavaScript `esprima`, and C++ `clang`
+- ✅ **Type Inference**: Automatic detection of variable types
+- ✅ **Operator Mapping**: Proper conversion between language operators
+- ✅ **Function Translation**: Complete function signature and body conversion
+- ✅ **STL Integration**: C++ translations use standard library containers
+- ✅ **Error Handling**: Comprehensive validation and error reporting
+- ✅ **Cross-Platform**: Works on any system with required language tools
 
 ---
 

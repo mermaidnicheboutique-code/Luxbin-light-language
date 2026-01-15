@@ -7,6 +7,9 @@ qiskit-ibm-runtime>=0.17.0
 # HTTP Server
 aiohttp>=3.9.0
 
+# C++ AST Parsing
+clang>=17.0.0
+
 # Cryptography
 cryptography>=41.0.0
 

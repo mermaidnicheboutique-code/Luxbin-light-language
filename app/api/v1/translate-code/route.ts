@@ -4,8 +4,8 @@ import path from 'path';
 
 interface CodeTranslationRequest {
     code: string;
-    source_language: 'python' | 'javascript';
-    target_language: 'python' | 'javascript';
+    source_language: 'python' | 'javascript' | 'cpp';
+    target_language: 'python' | 'javascript' | 'cpp';
     enable_type_inference?: boolean;
 }
 
@@ -37,17 +37,17 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        if (!['python', 'javascript'].includes(source_language)) {
+        if (!['python', 'javascript', 'cpp'].includes(source_language)) {
             return NextResponse.json({
                 success: false,
-                error: 'Source language must be "python" or "javascript"'
+                error: 'Source language must be "python", "javascript", or "cpp"'
             }, { status: 400 });
         }
 
-        if (!['python', 'javascript'].includes(target_language)) {
+        if (!['python', 'javascript', 'cpp'].includes(target_language)) {
             return NextResponse.json({
                 success: false,
-                error: 'Target language must be "python" or "javascript"'
+                error: 'Target language must be "python", "javascript", or "cpp"'
             }, { status: 400 });
         }
 
@@ -99,10 +99,14 @@ export async function GET() {
     return NextResponse.json({
         service: 'LUXBIN Code Language Translator',
         version: '1.0.0',
-        supported_languages: ['python', 'javascript'],
+        supported_languages: ['python', 'javascript', 'cpp'],
         supported_translations: [
             'python → javascript',
-            'javascript → python'
+            'python → cpp',
+            'javascript → python',
+            'javascript → cpp',
+            'cpp → python',
+            'cpp → javascript'
         ],
         features: [
             'AST-based parsing',

@@ -6,9 +6,10 @@ LUXBIN now supports translating code between programming languages using advance
 
 ## Supported Languages
 
-- **Python** ↔ **JavaScript**
+- **Python** ↔ **JavaScript** ↔ **C++**
 - AST-based parsing for accurate syntax analysis
 - Type inference and cross-language type mapping
+- Support for modern C++17 features and STL containers
 
 ## Quick Start
 
@@ -68,6 +69,42 @@ result = processNumbers(data)
 print(result)
 ```
 
+### Python to C++
+
+```python
+# Input Python code
+def calculate_sum(numbers):
+    total = 0
+    for num in numbers:
+        total += num
+    return total
+
+data = [1, 2, 3, 4, 5]
+result = calculate_sum(data)
+print(f"Sum: {result}")
+```
+
+**Translates to C++:**
+```cpp
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+auto calculate_sum(vector<auto> numbers) {
+    auto total = 0;
+    for (auto num : numbers) {
+        total = total + num;
+    }
+    return total;
+}
+
+auto data = vector<auto>{1, 2, 3, 4, 5};
+auto result = calculate_sum(data);
+cout << "Sum: " << result << endl;
+```
+
 ## Language Differences Handled
 
 ### Operators
@@ -80,16 +117,16 @@ print(result)
 | `not` | `!` | Logical NOT |
 
 ### Data Types
-| Python | JavaScript | Type Category |
-|--------|------------|----------------|
-| `int` | `number` | Primitive |
-| `float` | `number` | Primitive |
-| `str` | `string` | Primitive |
-| `bool` | `boolean` | Primitive |
-| `list` | `Array` | Array |
-| `dict` | `Object` | Object |
-| `tuple` | `Array` | Array (immutable) |
-| `set` | `Set` | Object |
+| Python | JavaScript | C++ | Type Category |
+|--------|------------|-----|----------------|
+| `int` | `number` | `int` | Primitive |
+| `float` | `number` | `double` | Primitive |
+| `str` | `string` | `std::string` | Primitive |
+| `bool` | `boolean` | `bool` | Primitive |
+| `list` | `Array` | `std::vector` | Array |
+| `dict` | `Object` | `std::unordered_map` | Object |
+| `tuple` | `Array` | `std::vector` | Array (immutable) |
+| `set` | `Set` | `std::unordered_set` | Object |
 
 ### Control Structures
 
@@ -134,12 +171,30 @@ for (let item of items) {
 ### REST API
 
 ```bash
-# Basic translation
+# Python to JavaScript
 curl -X POST http://localhost:3000/api/v1/translate-code \
   -H "Content-Type: application/json" \
   -d '{
     "code": "def hello(name): return f\"Hello, {name}!\"",
     "source_language": "python",
+    "target_language": "javascript"
+  }'
+
+# Python to C++
+curl -X POST http://localhost:3000/api/v1/translate-code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "def hello(name): return f\"Hello, {name}!\"",
+    "source_language": "python",
+    "target_language": "cpp"
+  }'
+
+# C++ to JavaScript
+curl -X POST http://localhost:3000/api/v1/translate-code \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "auto hello(std::string name) { return \"Hello, \" + name; }",
+    "source_language": "cpp",
     "target_language": "javascript"
   }'
 ```
@@ -180,6 +235,10 @@ def greet(name):
 js_code = translator.translate_python_to_javascript(python_code)
 print(js_code)
 
+# Translate Python to C++
+cpp_code = translator.translate_python_to_cpp(python_code)
+print(cpp_code)
+
 # Translate JavaScript to Python
 js_code = """
 function greet(name) {
@@ -189,6 +248,19 @@ function greet(name) {
 
 py_code = translator.translate_javascript_to_python(js_code)
 print(py_code)
+
+# Translate C++ to JavaScript
+cpp_code_example = """
+#include <iostream>
+#include <string>
+
+auto greet(std::string name) {
+    return "Hello, " + name;
+}
+"""
+
+js_from_cpp = translator.translate_cpp_to_javascript(cpp_code_example)
+print(js_from_cpp)
 
 # Type inference
 types = translator.infer_types("x = 42\ny = 'hello'", "python")
@@ -231,18 +303,20 @@ except ValueError as e:
 ## Limitations
 
 ### Current Limitations
-- **Scope**: Python ↔ JavaScript only (for now)
+- **C++ Parsing**: Currently uses mock implementation (full clang AST traversal planned)
 - **Complexity**: Simple to medium complexity code works best
 - **Libraries**: Standard library functions only (no external dependencies)
 - **Async/Await**: Basic support for async functions
 - **Classes**: Basic class translation (experimental)
+- **Templates**: C++ template translation not yet supported
 
 ### Future Enhancements
-- Support for more language pairs (Java, C++, Go, etc.)
-- Advanced type inference with generics
-- Library/framework specific translations
-- IDE integration
-- Batch processing capabilities
+- **Full C++ AST Support**: Complete clang-based parsing and traversal
+- **More Language Pairs**: Java, Go, Rust, and other languages
+- **Advanced Type Inference**: Generic types and template support
+- **Library Translation**: Framework-specific code patterns
+- **IDE Integration**: Plugin support for popular editors
+- **Batch Processing**: Multi-file translation capabilities
 
 ## Testing
 

@@ -17,6 +17,29 @@ from qiskit.visualization import plot_histogram, plot_bloch_multivector
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Try to import IonQ SDKs
+try:
+    import ionq
+    IONQ_AVAILABLE = True
+    IONQ_DIRECT = True
+except ImportError:
+    try:
+        from qiskit_ionq import IonQProvider
+        IONQ_AVAILABLE = True
+        IONQ_DIRECT = False
+    except ImportError:
+        IONQ_AVAILABLE = False
+        IONQ_DIRECT = False
+
+# Try to import Rigetti PyQuil
+try:
+    from pyquil import get_qc, Program
+    from pyquil.gates import *
+    from pyquil.api import ForestConnection
+    PYQUIL_AVAILABLE = True
+except ImportError:
+    PYQUIL_AVAILABLE = False
+
 # LUXBIN Alphabet (77 characters - 6-7 bits per character)
 LUXBIN_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 .,!?;:-()[]{}@#$%^&*+=_~`<>\"'|\\"
 
@@ -106,31 +129,121 @@ def create_luxbin_quantum_circuit(wavelengths, num_qubits=3):
 
 def run_on_quantum_computer(circuit, backend_name='ibm_brisbane'):
     """
-    Run circuit on real IBM quantum hardware
+    Run circuit on real quantum hardware (IBM, IonQ, Rigetti)
     Returns measurement results
     """
-    print(f"🔬 Connecting to IBM Quantum computer: {backend_name}")
+    # Determine provider from backend name
+    if backend_name.startswith('ibm_'):
+        provider = 'ibm'
+    elif backend_name.startswith('ionq_'):
+        provider = 'ionq'
+    elif backend_name.startswith('rigetti_'):
+        provider = 'rigetti'
+    else:
+        provider = 'ibm'  # default
 
-    # Get backend
-    service = QiskitRuntimeService()
-    backend = service.backend(backend_name)
+    print(f"🔬 Connecting to {provider.upper()} quantum computer: {backend_name}")
 
-    print(f"✅ Connected! Queue status: {backend.status().pending_jobs} jobs pending")
-    print(f"📊 Backend has {backend.num_qubits} qubits")
+    if provider == 'ibm':
+        # IBM Quantum
+        service = QiskitRuntimeService()
+        backend = service.backend(backend_name)
 
-    # Transpile for hardware
-    print("🔄 Transpiling circuit for quantum hardware...")
-    transpiled = transpile(circuit, backend=backend, optimization_level=3)
+        print(f"✅ Connected! Queue status: {backend.status().pending_jobs} jobs pending")
+        print(f"📊 Backend has {backend.num_qubits} qubits")
 
-    # Run on quantum computer
-    print("🚀 Submitting job to quantum computer...")
-    sampler = Sampler(backend)
-    job = sampler.run([transpiled], shots=1024)
+        # Transpile for hardware
+        print("🔄 Transpiling circuit for quantum hardware...")
+        transpiled = transpile(circuit, backend=backend, optimization_level=3)
 
-    print(f"⏳ Job submitted! Job ID: {job.job_id()}")
-    print("⏳ Waiting for quantum computer to execute...")
+        # Run on quantum computer
+        print("🚀 Submitting job to quantum computer...")
+        sampler = Sampler(backend)
+        job = sampler.run([transpiled], shots=1024)
 
-    result = job.result()
+        print(f"⏳ Job submitted! Job ID: {job.job_id()}")
+        print("⏳ Waiting for quantum computer to execute...")
+
+        result = job.result()
+
+    elif provider == 'ionq':
+        # IonQ quantum computer
+        if not IONQ_AVAILABLE:
+            raise ImportError("IonQ SDK not available. Install with: pip install ionq-sdk or pip install qiskit-ionq")
+
+        import os
+        ionq_api_key = os.getenv('IONQ_API_KEY')
+        if not ionq_api_key:
+            raise ValueError("IONQ_API_KEY environment variable not set")
+
+        print(f"🔬 Running on IonQ {backend_name}...")
+
+        if IONQ_DIRECT:
+            # Use direct IonQ SDK
+            client = ionq.Client(api_key=ionq_api_key)
+            # Convert Qiskit circuit to IonQ format and run
+            # This is a simplified version - real implementation would need circuit conversion
+            job = client.submit_job(circuit=circuit, backend=backend_name, shots=1024)
+            result = job.result()
+        else:
+            # Use Qiskit IonQ provider
+            provider = IonQProvider(token=ionq_api_key)
+            backend = provider.get_backend(backend_name)
+            transpiled = transpile(circuit, backend=backend, optimization_level=3)
+            sampler = Sampler(backend)
+            job = sampler.run([transpiled], shots=1024)
+            result = job.result()
+
+    elif provider == 'rigetti':
+        # Rigetti quantum computer
+        if not PYQUIL_AVAILABLE:
+            raise ImportError("PyQuil not available. Install with: pip install pyquil")
+
+        import os
+        rigetti_api_key = os.getenv('RIGETTI_API_KEY')
+
+        print(f"🔬 Running on Rigetti {backend_name}...")
+
+        # Initialize Forest connection
+        if rigetti_api_key:
+            connection = ForestConnection(api_key=rigetti_api_key)
+        else:
+            connection = ForestConnection()
+
+        # Get quantum computer
+        qc = get_qc(backend_name, connection=connection)
+
+        # Convert Qiskit circuit to PyQuil program
+        # This is simplified - real implementation needs proper circuit conversion
+        program = Program()
+        # Add gates from Qiskit circuit to PyQuil program
+        for instruction in circuit.data:
+            gate_name = instruction.operation.name
+            qubits = [q.index for q in instruction.qubits]
+            if gate_name == 'h':
+                program += H(qubits[0])
+            elif gate_name == 'x':
+                program += X(qubits[0])
+            elif gate_name == 'y':
+                program += Y(qubits[0])
+            elif gate_name == 'z':
+                program += Z(qubits[0])
+            elif gate_name == 'cx':
+                program += CNOT(qubits[0], qubits[1])
+            # Add more gate conversions as needed
+
+        # Run on Rigetti quantum computer
+        executable = qc.compile(program)
+        result = qc.run(executable)
+
+        # Convert result back to Qiskit format for compatibility
+        # This is a simplified conversion
+        result = type('Result', (), {
+            'quasi_dists': [result],
+            'result': lambda: type('SubResult', (), {
+                'get_counts': lambda: dict(enumerate(result.tolist()))
+            })()
+        })()
 
     print("✅ Quantum execution complete!")
     return result

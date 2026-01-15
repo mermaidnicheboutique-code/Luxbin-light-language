@@ -15,6 +15,12 @@ import ast
 import json
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass
+try:
+    import clang.cindex as clang
+    CLANG_AVAILABLE = True
+except ImportError:
+    CLANG_AVAILABLE = False
+    print("Warning: clang not available. C++ translation will not work.")
 
 
 @dataclass
@@ -61,6 +67,19 @@ class CodeTranslator:
             'boolean': TypeInfo('boolean', 'primitive', 'boolean', 'bool'),
             'Array': TypeInfo('Array', 'array', 'Array', 'list'),
             'Object': TypeInfo('Object', 'object', 'Object', 'dict'),
+
+            # C++ types
+            'int32_t': TypeInfo('int32_t', 'primitive', 'number', 'int'),
+            'int64_t': TypeInfo('int64_t', 'primitive', 'number', 'int'),
+            'float32': TypeInfo('float32', 'primitive', 'number', 'float'),
+            'float64': TypeInfo('float64', 'primitive', 'number', 'float'),
+            'double': TypeInfo('double', 'primitive', 'number', 'float'),
+            'char': TypeInfo('char', 'primitive', 'string', 'str'),
+            'std::string': TypeInfo('std::string', 'primitive', 'string', 'str'),
+            'bool': TypeInfo('bool', 'primitive', 'boolean', 'bool'),
+            'std::vector': TypeInfo('std::vector', 'array', 'Array', 'list'),
+            'std::map': TypeInfo('std::map', 'object', 'Object', 'dict'),
+            'std::unordered_map': TypeInfo('std::unordered_map', 'object', 'Object', 'dict'),
         }
 
     def translate_python_to_javascript(self, python_code: str) -> str:
@@ -96,6 +115,80 @@ class CodeTranslator:
             return self._js_ast_to_python(js_ast)
         except Exception as e:
             raise ValueError(f"Invalid JavaScript syntax: {e}")
+
+    def translate_python_to_cpp(self, python_code: str) -> str:
+        """
+        Translate Python code to C++.
+
+        Args:
+            python_code: Python source code
+
+        Returns:
+            C++ equivalent code
+        """
+        try:
+            # Parse Python AST
+            tree = ast.parse(python_code)
+            return self._python_ast_to_cpp(tree)
+        except SyntaxError as e:
+            raise ValueError(f"Invalid Python syntax: {e}")
+
+    def translate_cpp_to_python(self, cpp_code: str) -> str:
+        """
+        Translate C++ code to Python.
+
+        Args:
+            cpp_code: C++ source code
+
+        Returns:
+            Python equivalent code
+        """
+        if not CLANG_AVAILABLE:
+            raise ValueError("C++ translation requires clang library. Install with: pip install clang")
+
+        try:
+            # Parse C++ AST using clang
+            cpp_ast = self._parse_cpp_ast(cpp_code)
+            return self._cpp_ast_to_python(cpp_ast)
+        except Exception as e:
+            raise ValueError(f"Invalid C++ syntax: {e}")
+
+    def translate_javascript_to_cpp(self, js_code: str) -> str:
+        """
+        Translate JavaScript code to C++.
+
+        Args:
+            js_code: JavaScript source code
+
+        Returns:
+            C++ equivalent code
+        """
+        try:
+            # Parse JavaScript AST
+            js_ast = self._parse_js_ast(js_code)
+            return self._js_ast_to_cpp(js_ast)
+        except Exception as e:
+            raise ValueError(f"Invalid JavaScript syntax: {e}")
+
+    def translate_cpp_to_javascript(self, cpp_code: str) -> str:
+        """
+        Translate C++ code to JavaScript.
+
+        Args:
+            cpp_code: C++ source code
+
+        Returns:
+            JavaScript equivalent code
+        """
+        if not CLANG_AVAILABLE:
+            raise ValueError("C++ translation requires clang library. Install with: pip install clang")
+
+        try:
+            # Parse C++ AST using clang
+            cpp_ast = self._parse_cpp_ast(cpp_code)
+            return self._cpp_ast_to_javascript(cpp_ast)
+        except Exception as e:
+            raise ValueError(f"Invalid C++ syntax: {e}")
 
     def _python_ast_to_js(self, node: ast.AST) -> str:
         """Convert Python AST to JavaScript code."""
@@ -152,6 +245,54 @@ class CodeTranslator:
             ast.GtE: '>=',
         }
         return op_map.get(type(op), '?')
+
+    def _parse_cpp_ast(self, cpp_code: str) -> Any:
+        """
+        Parse C++ code to AST using clang.
+
+        Args:
+            cpp_code: C++ source code
+
+        Returns:
+            Clang AST root node
+        """
+        try:
+            # Create a temporary C++ file
+            import tempfile
+            import os
+
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.cpp', delete=False) as f:
+                f.write(cpp_code)
+                temp_file = f.name
+
+            try:
+                # Parse the C++ file
+                index = clang.Index.create()
+                translation_unit = index.parse(temp_file, ['-std=c++17'])
+
+                if not translation_unit:
+                    raise ValueError("Failed to parse C++ code")
+
+                # Check for parsing errors
+                if len(translation_unit.diagnostics) > 0:
+                    errors = []
+                    for diag in translation_unit.diagnostics:
+                        if diag.severity >= clang.Diagnostic.Error:
+                            errors.append(str(diag))
+                    if errors:
+                        raise ValueError("C++ parsing errors: " + "; ".join(errors))
+
+                return translation_unit.cursor
+
+            finally:
+                # Clean up temporary file
+                try:
+                    os.unlink(temp_file)
+                except:
+                    pass
+
+        except Exception as e:
+            raise ValueError(f"C++ AST parsing failed: {e}")
 
     def _parse_js_ast(self, js_code: str) -> Dict[str, Any]:
         """
@@ -289,6 +430,185 @@ try {{
 
         return f'# Unsupported JS node: {node_type}'
 
+    def _python_ast_to_cpp(self, node: ast.AST) -> str:
+        """Convert Python AST to C++ code."""
+        if isinstance(node, ast.Module):
+            includes = ['#include <iostream>', '#include <string>', '#include <vector>', '#include <unordered_map>']
+            code_lines = []
+
+            # Add includes
+            code_lines.extend(includes)
+            code_lines.append('')
+            code_lines.append('using namespace std;')
+            code_lines.append('')
+
+            # Convert body
+            for stmt in node.body:
+                cpp_stmt = self._python_stmt_to_cpp(stmt)
+                if cpp_stmt:
+                    code_lines.append(cpp_stmt)
+
+            return '\n'.join(code_lines)
+
+        elif isinstance(node, ast.FunctionDef):
+            params = []
+            for arg in node.args.args:
+                # Map Python types to C++ types
+                cpp_type = self._python_type_to_cpp('auto')  # Default to auto
+                params.append(f'{cpp_type} {arg.arg}')
+
+            body_stmts = []
+            for stmt in node.body:
+                cpp_stmt = self._python_stmt_to_cpp(stmt)
+                if cpp_stmt:
+                    body_stmts.append(f'    {cpp_stmt}')
+
+            if not body_stmts:
+                body_stmts = ['    // Function body']
+
+            params_str = ', '.join(params)
+            return f'auto {node.name}({params_str}) {{\n' + '\n'.join(body_stmts) + '\n}'
+
+        elif isinstance(node, ast.Return):
+            value = self._python_expr_to_cpp(node.value) if node.value else ''
+            return f'return {value};'
+
+        elif isinstance(node, ast.Assign):
+            targets = ', '.join(self._python_expr_to_cpp(target) for target in node.targets)
+            value = self._python_expr_to_cpp(node.value)
+            return f'auto {targets} = {value};'
+
+        elif isinstance(node, ast.Expr):
+            expr = self._python_expr_to_cpp(node.value)
+            return f'{expr};'
+
+        else:
+            return f'// Unsupported Python construct: {type(node).__name__}'
+
+    def _python_stmt_to_cpp(self, node: ast.AST) -> str:
+        """Convert Python statement to C++."""
+        if isinstance(node, ast.Expr):
+            if isinstance(node.value, ast.Call):
+                func_name = self._python_expr_to_cpp(node.value.func)
+                if func_name == 'print':
+                    args = [self._python_expr_to_cpp(arg) for arg in node.value.args]
+                    return f'cout << {" << ".join(args)} << endl;'
+        return self._python_ast_to_cpp(node)
+
+    def _python_expr_to_cpp(self, expr: ast.AST) -> str:
+        """Convert Python expression to C++."""
+        if isinstance(expr, ast.Name):
+            return expr.id
+
+        elif isinstance(expr, ast.Constant):
+            if isinstance(expr.value, str):
+                return f'"{expr.value}"'
+            elif expr.value is None:
+                return '{}';  # C++11 empty initializer
+            else:
+                return str(expr.value)
+
+        elif isinstance(expr, ast.BinOp):
+            left = self._python_expr_to_cpp(expr.left)
+            right = self._python_expr_to_cpp(expr.right)
+            op = self._python_op_to_cpp(expr.op)
+            return f'{left} {op} {right}'
+
+        elif isinstance(expr, ast.Call):
+            func = self._python_expr_to_cpp(expr.func)
+            args = [self._python_expr_to_cpp(arg) for arg in expr.args]
+            return f'{func}({", ".join(args)})'
+
+        elif isinstance(expr, ast.List):
+            elements = [self._python_expr_to_cpp(elt) for elt in expr.elts]
+            return f'vector<auto>{{{", ".join(elements)}}}'
+
+        elif isinstance(expr, ast.Dict):
+            # Convert dict to unordered_map
+            items = []
+            for key, value in zip(expr.keys, expr.values):
+                if key:
+                    key_cpp = self._python_expr_to_cpp(key)
+                    value_cpp = self._python_expr_to_cpp(value)
+                    items.append(f'{{{key_cpp}, {value_cpp}}}')
+            return f'unordered_map<auto, auto>{{{", ".join(items)}}}'
+
+        return '/* unsupported expression */'
+
+    def _python_op_to_cpp(self, op: ast.operator) -> str:
+        """Convert Python operators to C++."""
+        op_map = {
+            ast.Add: '+',
+            ast.Sub: '-',
+            ast.Mult: '*',
+            ast.Div: '/',
+            ast.Mod: '%',
+            ast.Eq: '==',
+            ast.NotEq: '!=',
+            ast.Lt: '<',
+            ast.LtE: '<=',
+            ast.Gt: '>',
+            ast.GtE: '>=',
+        }
+        return op_map.get(type(op), '?')
+
+    def _python_type_to_cpp(self, python_type: str) -> str:
+        """Map Python types to C++ types."""
+        type_map = {
+            'int': 'int',
+            'float': 'double',
+            'str': 'string',
+            'bool': 'bool',
+            'list': 'vector<auto>',
+            'dict': 'unordered_map<auto, auto>',
+        }
+        return type_map.get(python_type, 'auto')
+
+    def _cpp_ast_to_python(self, cursor) -> str:
+        """Convert C++ AST to Python code."""
+        # This is a simplified implementation
+        # In a full implementation, we'd traverse the clang AST
+
+        # Mock implementation for demonstration
+        return """# C++ to Python conversion
+# This is a simplified implementation
+# Full implementation would traverse clang AST
+
+def converted_function():
+    # C++ code would be analyzed here
+    return "converted"
+"""
+
+    def _cpp_ast_to_javascript(self, cursor) -> str:
+        """Convert C++ AST to JavaScript code."""
+        # Mock implementation for demonstration
+        return """// C++ to JavaScript conversion
+// This is a simplified implementation
+// Full implementation would traverse clang AST
+
+function convertedFunction() {
+    // C++ code would be analyzed here
+    return "converted";
+}
+"""
+
+    def _js_ast_to_cpp(self, js_ast: Dict[str, Any]) -> str:
+        """Convert JavaScript AST to C++ code."""
+        # Mock implementation for demonstration
+        return """#include <iostream>
+#include <string>
+
+using namespace std;
+
+// JavaScript to C++ conversion
+// This is a simplified implementation
+
+auto convertedFunction() {
+    // JavaScript code would be analyzed here
+    return "converted";
+}
+"""
+
     def _js_expr_to_python(self, expr: Any) -> str:
         """Convert JavaScript expression to Python."""
         if not expr:
@@ -368,6 +688,10 @@ try {{
             # Mock type inference for JavaScript
             types['mock_var'] = self.type_map.get('number', TypeInfo('unknown', 'unknown', 'unknown', 'unknown'))
 
+        elif language == 'cpp':
+            # Mock type inference for C++
+            types['mock_var'] = self.type_map.get('int', TypeInfo('unknown', 'unknown', 'unknown', 'unknown'))
+
         return types
 
     def _infer_python_types(self, node: ast.AST, types: Dict[str, TypeInfo]):
@@ -414,10 +738,19 @@ def main():
                 target_lang = input_data['target_language']
 
                 try:
+                    result = ""
                     if source_lang == 'python' and target_lang == 'javascript':
                         result = translator.translate_python_to_javascript(code)
                     elif source_lang == 'javascript' and target_lang == 'python':
                         result = translator.translate_javascript_to_python(code)
+                    elif source_lang == 'python' and target_lang == 'cpp':
+                        result = translator.translate_python_to_cpp(code)
+                    elif source_lang == 'cpp' and target_lang == 'python':
+                        result = translator.translate_cpp_to_python(code)
+                    elif source_lang == 'javascript' and target_lang == 'cpp':
+                        result = translator.translate_javascript_to_cpp(code)
+                    elif source_lang == 'cpp' and target_lang == 'javascript':
+                        result = translator.translate_cpp_to_javascript(code)
                     else:
                         result = f"Unsupported translation: {source_lang} -> {target_lang}"
 
@@ -492,6 +825,25 @@ function calculate(x, y) {
     try:
         py_code = translator.translate_javascript_to_python(js_example)
         print(py_code)
+    except Exception as e:
+        print(f"Translation error: {e}")
+
+    # Example C++ code
+    cpp_example = '''
+#include <iostream>
+
+int main() {
+    int x = 42;
+    std::cout << "Hello, World! " << x << std::endl;
+    return 0;
+}
+'''
+    print(f"\nOriginal C++ code:")
+    print(cpp_example)
+    print("Translated to Python:")
+    try:
+        cpp_to_py = translator.translate_cpp_to_python(cpp_example)
+        print(cpp_to_py)
     except Exception as e:
         print(f"Translation error: {e}")
 

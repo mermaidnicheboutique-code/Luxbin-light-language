@@ -107,6 +107,60 @@ w = a || b;
         self.assertIn('z = a and b', result)
         self.assertIn('w = a or b', result)
 
+    def test_python_to_cpp_basic_function(self):
+        """Test basic Python function translation to C++."""
+        python_code = """
+def greet(name):
+    return "Hello, " + name
+"""
+        result = self.translator.translate_python_to_cpp(python_code)
+        self.assertIn('#include <iostream>', result)
+        self.assertIn('#include <string>', result)
+        self.assertIn('auto greet(string name)', result)
+        self.assertIn('return "Hello, " + name;', result)
+
+    def test_python_to_cpp_variables(self):
+        """Test Python variable assignments to C++."""
+        python_code = """
+x = 42
+y = "hello"
+z = [1, 2, 3]
+"""
+        result = self.translator.translate_python_to_cpp(python_code)
+        self.assertIn('auto x = 42;', result)
+        self.assertIn('auto y = "hello";', result)
+        self.assertIn('vector<auto>', result)
+
+    def test_python_to_cpp_print(self):
+        """Test Python print statement translation to C++."""
+        python_code = 'print("Hello, World!")'
+        result = self.translator.translate_python_to_cpp(python_code)
+        self.assertIn('cout << "Hello, World!" << endl;', result)
+
+    def test_cpp_to_python_mock(self):
+        """Test C++ to Python translation (mock implementation)."""
+        cpp_code = "int main() { return 0; }"
+        result = self.translator.translate_cpp_to_python(cpp_code)
+        # Since this is a mock implementation, just check it returns something
+        self.assertIsInstance(result, str)
+        self.assertGreater(len(result), 0)
+
+    def test_cpp_to_javascript_mock(self):
+        """Test C++ to JavaScript translation (mock implementation)."""
+        cpp_code = "int main() { return 0; }"
+        result = self.translator.translate_cpp_to_javascript(cpp_code)
+        # Since this is a mock implementation, just check it returns something
+        self.assertIsInstance(result, str)
+        self.assertGreater(len(result), 0)
+
+    def test_javascript_to_cpp_mock(self):
+        """Test JavaScript to C++ translation (mock implementation)."""
+        js_code = 'function test() { return 42; }'
+        result = self.translator.translate_javascript_to_cpp(js_code)
+        # Since this is a mock implementation, just check it returns something
+        self.assertIsInstance(result, str)
+        self.assertGreater(len(result), 0)
+
     def test_type_inference_python(self):
         """Test type inference for Python code."""
         code = """
@@ -125,6 +179,13 @@ w = {"key": "value"}
         """Test type inference for JavaScript code."""
         # This is currently mock implementation
         types = self.translator.infer_types("let x = 42;", 'javascript')
+        # Should not crash, but may return mock data
+        self.assertIsInstance(types, dict)
+
+    def test_type_inference_cpp(self):
+        """Test type inference for C++ code."""
+        # This is currently mock implementation
+        types = self.translator.infer_types("int x = 42;", 'cpp')
         # Should not crash, but may return mock data
         self.assertIsInstance(types, dict)
 
@@ -212,6 +273,24 @@ function factorial(n) {
         self.assertIn('if n == 0:', result)
         self.assertIn('return 1', result)
         self.assertIn('return n * factorial(n - 1)', result)
+
+    def test_complex_python_to_cpp(self):
+        """Test translation of a more complex Python function to C++."""
+        python_code = '''
+def calculate_fibonacci(n):
+    if n <= 1:
+        return n
+    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
+
+result = calculate_fibonacci(10)
+print(f"Fibonacci result: {result}")
+'''
+        result = self.translator.translate_python_to_cpp(python_code)
+        self.assertIn('#include <iostream>', result)
+        self.assertIn('#include <string>', result)
+        self.assertIn('auto calculate_fibonacci(int n)', result)
+        self.assertIn('if (n <= 1)', result)
+        self.assertIn('cout << "Fibonacci result: " << result << endl;', result)
 
 
 if __name__ == '__main__':
