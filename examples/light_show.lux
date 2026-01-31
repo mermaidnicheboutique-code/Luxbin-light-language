@@ -1,0 +1,19 @@
+# LUXBIN Light Show
+# Demonstrates wavelength encoding and string operations
+
+func wavelength_display(text)
+    let i = 0
+    let length = photon_len(text)
+    while i < length do
+        let ch = photon_slice(text, i, i + 1)
+        let wl = photon_wavelength(ch)
+        photon_print(photon_concat(photon_concat(ch, " -> "), photon_to_string(wl)))
+        i = i + 1
+    end
+end
+
+photon_print("=== LUXBIN Light Show ===")
+photon_print("")
+wavelength_display("LUXBIN")
+photon_print("")
+photon_print("Each character is a unique wavelength of light.")

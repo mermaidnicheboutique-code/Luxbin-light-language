@@ -1,0 +1,20 @@
+# LUXBIN Quantum Demo
+# Demonstrates quantum operations
+
+func quantum_random()
+    quantum
+        let q = superpose(0, 1)
+        let bit = measure(q)
+    end
+    return bit
+end
+
+# Generate 8-bit random number
+let random = 0
+for i in [0, 1, 2, 3, 4, 5, 6, 7] do
+    let bit = quantum_random()
+    random = random * 2 + bit
+end
+
+photon_print("Quantum random number:")
+photon_print(random)

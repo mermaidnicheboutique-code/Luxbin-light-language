@@ -1,0 +1,29 @@
+# LUXBIN Sorting
+# Bubble sort implementation
+
+func bubble_sort(arr)
+    let n = photon_len(arr)
+    let i = 0
+    while i < n do
+        let j = 0
+        while j < n - i - 1 do
+            let a = photon_get(arr, j)
+            let b = photon_get(arr, j + 1)
+            if a > b then
+                photon_set(arr, j, b)
+                photon_set(arr, j + 1, a)
+            end
+            j = j + 1
+        end
+        i = i + 1
+    end
+    return arr
+end
+
+let numbers = [5, 3, 8, 1, 9, 2, 7, 4, 6]
+photon_print("Before:")
+photon_print(numbers)
+
+let sorted = bubble_sort(numbers)
+photon_print("After:")
+photon_print(sorted)

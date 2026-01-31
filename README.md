@@ -234,6 +234,62 @@ LUXBIN supports classical, quantum, and satellite computing paradigms in a singl
 
 ---
 
+## LUXBIN Programming Language
+
+LUXBIN is also a complete **photonic programming language** with a compiler, VM, and standard library.
+
+### Running LUXBIN Programs
+
+```bash
+# Run a .lux program
+python -m luxbin_compiler.cli run examples/hello_world.lux
+
+# Compile to bytecode
+python -m luxbin_compiler.cli compile examples/fibonacci.lux
+
+# Execute compiled bytecode
+python -m luxbin_compiler.cli exec examples/fibonacci.luxc
+
+# Interactive REPL
+python -m luxbin_compiler.cli repl
+
+# Show tokens (lexer output)
+python -m luxbin_compiler.cli tokens examples/hello_world.lux
+
+# Show AST
+python -m luxbin_compiler.cli ast examples/fibonacci.lux
+
+# Semantic analysis only
+python -m luxbin_compiler.cli check examples/factorial.lux
+```
+
+### Example Program
+
+```luxbin
+# Fibonacci in LUXBIN
+func fibonacci(n)
+    if n < 2 then
+        return n
+    end
+    return fibonacci(n - 1) + fibonacci(n - 2)
+end
+
+let result = fibonacci(10)
+photon_print(result)
+```
+
+### Compiler Architecture
+
+```
+Source (.lux) -> Lexer -> Parser -> Analyzer -> CodeGen -> VM
+                  |         |          |           |        |
+               Tokens     AST    Type Check   Bytecode  Execute
+```
+
+See [LUXBIN_LIGHT_LANGUAGE_SPEC.md](LUXBIN_LIGHT_LANGUAGE_SPEC.md) for the full language specification and [LUXBIN_RFC_STANDARD.md](LUXBIN_RFC_STANDARD.md) for the formal standard.
+
+---
+
 ## 📊 Technical Details
 
 ### Full Specification
@@ -627,6 +683,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 *Note: This is a research prototype developed by Nicheai. Production implementations should include proper error correction, synchronization, and quantum error mitigation. For commercial deployment or enterprise licensing, please contact Nicheai directly.*
-</xai:function_call">  
-<xai:function_call name="update_todo_list">
-<parameter name="updates">[{"id":"write_readme","status":"completed","content":"Created comprehensive README.md with concept explanation, usage examples, quantum integration details, and API reference"}]

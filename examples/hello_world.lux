@@ -1,0 +1,4 @@
+# LUXBIN Hello World
+# The simplest LUXBIN program
+
+photon_print("Hello, Light World!")

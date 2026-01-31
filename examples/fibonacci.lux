@@ -1,0 +1,12 @@
+# LUXBIN Fibonacci Sequence
+# Recursive implementation
+
+func fibonacci(n)
+    if n < 2 then
+        return n
+    end
+    return fibonacci(n - 1) + fibonacci(n - 2)
+end
+
+let result = fibonacci(10)
+photon_print(result)
