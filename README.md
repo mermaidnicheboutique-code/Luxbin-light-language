@@ -236,11 +236,96 @@ LUXBIN supports classical, quantum, and satellite computing paradigms in a singl
 
 ## 📊 Technical Details
 
-### LUXBIN Alphabet Mapping
-- **77 Characters**: A-Z, 0-9, space, punctuation, symbols (@#$%^&*+=_~`<>\"'|\\)
+### Full Specification
+
+See [LUXBIN_LIGHT_LANGUAGE_SPEC.md](LUXBIN_LIGHT_LANGUAGE_SPEC.md) for the complete technical specification.
+
+### LUXBIN Alphabet (A-Z)
+
+Each character is assigned a unique wavelength: `wavelength = 400 + (position / 77) x 300 nm`
+
+| Letter | Pos | nm | Color | Letter | Pos | nm | Color |
+|--------|-----|----|-------|--------|-----|----|-------|
+| A | 0 | 400.0 | Violet | N | 13 | 450.6 | Blue |
+| B | 1 | 403.9 | Violet | O | 14 | 454.5 | Blue |
+| C | 2 | 407.8 | Violet-Blue | P | 15 | 458.4 | Blue |
+| D | 3 | 411.7 | Violet-Blue | Q | 16 | 462.3 | Blue-Cyan |
+| E | 4 | 415.6 | Blue | R | 17 | 466.2 | Cyan |
+| F | 5 | 419.5 | Blue | S | 18 | 470.1 | Cyan |
+| G | 6 | 423.4 | Blue | T | 19 | 474.0 | Cyan |
+| H | 7 | 427.3 | Blue | U | 20 | 477.9 | Cyan-Green |
+| I | 8 | 431.2 | Blue-Indigo | V | 21 | 481.8 | Green |
+| J | 9 | 435.1 | Indigo | W | 22 | 485.7 | Green |
+| K | 10 | 439.0 | Indigo | X | 23 | 489.6 | Green |
+| L | 11 | 442.9 | Indigo | Y | 24 | 493.5 | Green |
+| M | 12 | 446.8 | Indigo-Blue | Z | 25 | 497.4 | Green |
+
+### Numbers (0-9)
+
+| Digit | Position | Wavelength (nm) | Color Region |
+|-------|----------|-----------------|--------------|
+| 0 | 26 | 501.3 | Cyan-Green |
+| 1 | 27 | 505.2 | Cyan-Green |
+| 2 | 28 | 509.1 | Green |
+| 3 | 29 | 513.0 | Green |
+| 4 | 30 | 516.9 | Green |
+| 5 | 31 | 520.8 | Green |
+| 6 | 32 | 524.7 | Green |
+| 7 | 33 | 528.6 | Green |
+| 8 | 34 | 532.5 | Green |
+| 9 | 35 | 536.4 | Yellow-Green |
+
+### Punctuation & Special Characters
+
+| Char | Name | Pos | nm | Char | Name | Pos | nm |
+|------|------|-----|----|------|------|-----|----|
+| ` ` | Space | 36 | 540.3 | `@` | At Sign | 50 | 594.8 |
+| `.` | Period | 37 | 544.2 | `#` | Hash | 51 | 598.7 |
+| `,` | Comma | 38 | 548.1 | `$` | Dollar | 52 | 602.6 |
+| `!` | Exclamation | 39 | 552.0 | `%` | Percent | 53 | 606.5 |
+| `?` | Question | 40 | 555.8 | `^` | Caret | 54 | 610.4 |
+| `;` | Semicolon | 41 | 559.7 | `&` | Ampersand | 55 | 614.3 |
+| `:` | Colon | 42 | 563.6 | `*` | Asterisk | 56 | 618.2 |
+| `-` | Hyphen | 43 | 567.5 | `+` | Plus | 57 | 622.1 |
+| `(` | Left Paren | 44 | 571.4 | `=` | Equals | 58 | 626.0 |
+| `)` | Right Paren | 45 | 575.3 | `_` | Underscore | 59 | 629.9 |
+| `[` | Left Bracket | 46 | 579.2 | `~` | Tilde | 60 | 633.8 |
+| `]` | Right Bracket | 47 | 583.1 | `<` | Less Than | 62 | 641.6 |
+| `{` | Left Brace | 48 | 587.0 | `>` | Greater Than | 63 | 645.5 |
+| `}` | Right Brace | 49 | 590.9 | `"` | Double Quote | 64 | 649.4 |
+| `'` | Apostrophe | 65 | 653.2 | `\|` | Pipe | 66 | 657.1 |
+| `\` | Backslash | 67 | 661.0 | `/` | Forward Slash | 68 | 664.9 |
+
+Positions 70-76 reserved for protocol control and future expansion.
+
+### Morse-Light Hybrid Patterns
+
+**Letters:**
+```
+A: .-      B: -...    C: -.-.    D: -..     E: .
+F: ..-.    G: --.     H: ....    I: ..      J: .---
+K: -.-     L: .-..    M: --      N: -.      O: ---
+P: .--.    Q: --.-    R: .-.     S: ...     T: -
+U: ..-     V: ...-    W: .--     X: -..-    Y: -.--
+Z: --..
+```
+
+**Numbers:**
+```
+0: -----   1: .----   2: ..---   3: ...--   4: ....-
+5: .....   6: -....   7: --...   8: ---..   9: ----.
+```
+
+**Punctuation:**
+```
+.: .-.-.-    ,: --..--    !: -.-.--    ?: ..--..
+;: -.-.-.    :: ---...    -: -....-    (: -.--.    ): -.--.-
+```
+
+### Additional Specs
+- **77 Characters** total across the visible spectrum
 - **Variable Bit Encoding**: 6-7 bits per character (adaptive based on data)
 - **HSL Generation**: Position-based hue calculation
-- **Wavelength Range**: 400-700nm (visible spectrum)
 - **Grammar Shades**: 10 categories including punctuation and binary modes
 - **Data Type Support**: Specialized encoding for images, audio, JSON, text files
 - **Compression**: Run-length encoding for repetitive data
