@@ -4,7 +4,9 @@
 
 *Developed by Nicheai - Pioneering Sustainable Computing Infrastructure*
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18180263.svg)](https://doi.org/10.5281/zenodo.18180263) [![Universal](https://img.shields.io/badge/Universal-All%20Computers-7C3AED?style=for-the-badge&logo=computer&logoColor=white)](https://github.com/nicheai/luxbin-light-language) [![Quantum Ready](https://img.shields.io/badge/Quantum-Diamond%20NV%20Centers-22C55E?style=for-the-badge&logo=diamond&logoColor=white)](https://github.com/nicheai/luxbin-light-language) [![Photonic](https://img.shields.io/badge/Photonic-Encoding-00D4AA?style=for-the-badge&logo=light&logoColor=white)](https://github.com/nicheai/luxbin-light-language) [![Mars Ready](https://img.shields.io/badge/🚀_Mars-Ready-DC2626?style=for-the-badge)](MARS_COMMUNICATION.md) [![Tested](https://img.shields.io/badge/Tested-IBM_Quantum-0066FF?style=for-the-badge&logo=ibm&logoColor=white)](https://quantum.ibm.com/) [![Nicheai](https://img.shields.io/badge/By-Nicheai-FF6B35?style=for-the-badge&logo=company&logoColor=white)](https://nicheai.com)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18180263.svg)](https://doi.org/10.5281/zenodo.18180263) [![Universal](https://img.shields.io/badge/Universal-All%20Computers-7C3AED?style=for-the-badge&logo=computer&logoColor=white)](https://github.com/nicheai/luxbin-light-language) [![Quantum Ready](https://img.shields.io/badge/Quantum-Diamond%20NV%20Centers-22C55E?style=for-the-badge&logo=diamond&logoColor=white)](https://github.com/nicheai/luxbin-light-language) [![Photonic](https://img.shields.io/badge/Photonic-Encoding-00D4AA?style=for-the-badge&logo=light&logoColor=white)](https://github.com/nicheai/luxbin-light-language) [![Mars Ready](https://img.shields.io/badge/🚀_Mars-Ready-DC2626?style=for-the-badge)](MARS_COMMUNICATION.md) [![Tested](https://img.shields.io/badge/Tested-IBM_Quantum-0066FF?style=for-the-badge&logo=ibm&logoColor=white)](https://quantum.ibm.com/) [![Nicheai](https://img.shields.io/badge/By-Nicheai-FF6B35?style=for-the-badge&logo=company&logoColor=white)](https://nicheai.com) [![Starlink Ready](https://img.shields.io/badge/🛰️_Starlink-Ready-000000?style=for-the-badge&logo=spacex&logoColor=white)](https://github.com/nichechristie/luxbin-quantum-grid)
+
+> 🛰️ **NEW: [LUXBIN Quantum Grid](https://github.com/nichechristie/luxbin-quantum-grid)** — Quantum-secured smart grid infrastructure designed for Starlink mesh networks. See the full ecosystem below.
 
 ---
 
@@ -653,6 +655,25 @@ python -m pytest
 # Run demo
 python luxbin_light_converter.py
 ```
+
+---
+
+## 🌐 LUXBIN Ecosystem
+
+This repo is part of the **LUXBIN Quantum Internet** ecosystem — a suite of tools building the infrastructure for quantum-secured global communication.
+
+| Repository | Description | Status |
+|:-----------|:------------|:------:|
+| 🛰️ **[luxbin-quantum-grid](https://github.com/nichechristie/luxbin-quantum-grid)** | **Quantum-secured smart grid for Starlink mesh networks** | [![Active](https://img.shields.io/badge/🔥-Partnership_Ready-green)](https://github.com/nichechristie/luxbin-quantum-grid) |
+| 🔮 **[Luxbin-Quantum-internet](https://github.com/nichechristie/Luxbin-Quantum-internet)** | Full quantum internet protocol stack + Academy | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18198505.svg)](https://doi.org/10.5281/zenodo.18198505) |
+| 🌈 **LUXBIN_Light_Language-** *(this repo)* | Universal photonic encoding (400-700nm) | [![Published](https://img.shields.io/badge/📄-Published-blue)](https://github.com/nichechristie/LUXBIN_Light_Language-) |
+| 🔄 **[luxbin-quantum-loop](https://github.com/nichechristie/luxbin-quantum-loop)** | Multi-backend quantum relay on IBM hardware | [![Live](https://img.shields.io/badge/⚡-Live-yellow)](https://github.com/nichechristie/luxbin-quantum-loop) |
+
+### 🛰️ Starlink Smart Grid Integration
+
+**NEW:** The LUXBIN Light Language now powers quantum-secured smart grid infrastructure designed for Starlink mesh networks.
+
+→ **[See the full Starlink integration plan](https://github.com/nichechristie/luxbin-quantum-grid)**
 
 ---
 
